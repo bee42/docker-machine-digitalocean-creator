@@ -1,0 +1,15 @@
+version: "2"
+services:
+  do-creator:
+    build:
+      context: .
+    image: bee42/do-docker-machine-creator
+    privileged: true
+    ports:
+      - 22
+    volumes:
+      - "./data:/data"
+    environment:
+     - DIGITALOCEAN_ACCESS_TOKEN
+     - SCALEWAY_ORGANIZATION
+     - SCALEWAY_REGION
