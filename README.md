@@ -1,12 +1,33 @@
 # Digital Ocean VM docker machine creator
 
-build
+Build a container to create [digitalocean](https://www.digitalocean.com/) docker machines.
+
+![](images/do-creator-overview.png)
+
+* Based on [DinD](https://hub.docker.com/_/docker/)
+* Access with ssh
+* digitalocean cli
+
+## Build the docker machine do creator
 
 ```
 $ docker build -t bee42/do-docker-machine-creator .
 ```
 
-usage on Docker for mac
+### build args
+
+| ARG             | Default     |
+|:----------------|:------------|
+| COMPOSE_VERSION | `1.9.0`     |
+| MACHINE_VERSION | `0.9.0-rc2` |
+| GLIBC_VERSION   | '2.23-r3'   |
+| DOCTL_VERSION   | `1.5.0`     |
+
+```
+$ docker build --build-args COMPOSE_VERSION=1.8.1 -t xxx/do-docker-machine-creator:with_compose_1.8.1 https://github.com/bee42/docker-machine-digitalocean-creator .
+```
+
+## Usage of the creator
 
 ```
 $ docker run -d --name do-creator \
@@ -15,18 +36,6 @@ $ docker run -d --name do-creator \
   bee42/do-docker-machine-creator
 $ ssh creator@localhost:2222
 # passwd creator
-```
-
-
-## Usage of the creator
-```
-$ docker run -d -p 2222:22 \
-  --name do-creator
-  -v `pwd`/config:/config \
-  --privileged \
-  bee42/do-docker-machine-creator
-$ ssh -p 2222 creator@<docker do-docker-machine-creator ip>
-# pw: creator
 ```
 
 ```
@@ -43,6 +52,25 @@ More services are available
 | 22   | sshd                    |
 | 2375 | uncrypted docker engine |
 | 9001 | supervisord admin       |
+
+
+## Usage with docker compose
+
+```
+$ export DIGITALOCEAN_ACCESS_TOKEN=xxx
+$ export DIGITALOCEAN_SIZE=1gb
+$ export DIGITALOCEAN_REGION=ams2
+$ docker-compose up -d
+$ docker-compose exec --user creator do-creator /bin/bash
+```
+
+access ssh port
+
+```
+$ ssh \
+ -p $(docker-compose port do-creator 22 |awk 'BEGIN { FS=":" } /1/ { print $2 }') \
+ creator@127.0.0.1
+```
 
 ## create a machine
 
@@ -76,13 +104,31 @@ $ doctl compute droplet list
 * https://github.com/digitalocean/doctl
 * https://www.digitalocean.com/community/tutorials/how-to-use-doctl-the-official-digitalocean-command-line-client
 
+
+## Make your certs transferable
+
+```
+$ dctrl master-node
+$ CONTROL=master-node
+$ eval \$(docker run --rm --volumes-from $CONTROL alpine
+       sed 's/DOCKER_/DOCKERCONTROL_/' /docker/env)"
+# start a container to access this engine
+$ docker run --volumes-from $CONTROL \
+  -e DOCKER_HOST=\$DOCKERCONTROL_HOST \
+  -e DOCKER_TLS_VERIFY=\$DOCKERCONTROL_TLS_VERIFY \
+  -e DOCKER_CERT_PATH=\$DOCKERCONTROL_CERT_PATH \
+  -e DOCKER_API_VERSION=\$DOCKERCONTROL_API_VERSION \
+  …
+```
+
+* https://github.com/jpetazzo/dctrl
+
 ## Links
 
 * http://label-schema.org/rc1/
 * https://github.com/andyshinn/alpine-pkg-glibc
 * https://github.com/jeanblanchard/docker-alpine-glibc/blob/master/Dockerfile
 
-***
 
 Regards
 Peter

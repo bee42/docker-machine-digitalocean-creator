@@ -11,5 +11,5 @@ services:
       - "./data:/data"
     environment:
      - DIGITALOCEAN_ACCESS_TOKEN
-     - SCALEWAY_ORGANIZATION
-     - SCALEWAY_REGION
+     - DIGITALOCEAN_REGION
+     - DIGITALOCEAN_SIZE
